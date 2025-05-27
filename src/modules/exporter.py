@@ -69,8 +69,8 @@ def append_to_coco(
     for inst in preds:
         mask   = inst["mask"]
         area   = int(mask.sum())
-        x1, y1, x2, y2 = cv2.boundingRect(mask.astype(np.uint8))
-        bbox   = [int(x1), int(y1), int(x2 - x1), int(y2 - y1)]
+        x1, y1, x2, y2 = inst["box"]
+        bbox = [int(x1), int(y1), int(x2 - x1), int(y2 - y1)]
         segm   = _mask_to_polygons(mask)
 
         coco.setdefault("annotations", []).append({

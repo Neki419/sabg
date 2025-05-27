@@ -42,7 +42,7 @@ def get_distinct_colors(n: int) -> List[tuple[int, int, int]]:
     ]
 
 
-def save_overlay(image_bgr: np.ndarray, instances: List[Dict], out_path: Path, background=False) -> None:
+def save_overlay(image_bgr: np.ndarray, instances: List[Dict], out_path: Path, draw_id=False, draw_back=False) -> None:
     """
     Save image with all masks overlayed in distinct colors and ID labels.
     If 'background' is present in an instance, draws a circle at that location.
@@ -58,7 +58,7 @@ def save_overlay(image_bgr: np.ndarray, instances: List[Dict], out_path: Path, b
         cv2.drawContours(overlay, contours, -1, color, 2)
 
         # Рисуем ID
-        if contours:
+        if contours and draw_id:
             M = cv2.moments(contours[0])
             if M['m00'] != 0:
                 cx = int(M['m10'] / M['m00'])
@@ -75,7 +75,7 @@ def save_overlay(image_bgr: np.ndarray, instances: List[Dict], out_path: Path, b
                 )
 
         # Рисуем фоновый круг, если он есть
-        if background and 'background' in inst and inst['background'] is not None:
+        if draw_back and 'background' in inst and inst['background'] is not None:
             bg = inst['background']
             center = tuple(map(int, bg['center']))
             radius = int(bg['radius'])
@@ -87,7 +87,7 @@ def save_overlay(image_bgr: np.ndarray, instances: List[Dict], out_path: Path, b
 
 
 
-def save_binary_masks(name: str, instances: List[Dict], out_dir: Path) -> None:
+def save_binary_masks(name: str, instances: List[Dict], out_dir: Path, draw_id=False) -> None:
     """
     Save all masks as a single RGB image with distinct colors and ID labels.
     """
@@ -105,7 +105,7 @@ def save_binary_masks(name: str, instances: List[Dict], out_dir: Path) -> None:
             canvas[:, :, c][mask.astype(bool)] = color[c]
 
         ys, xs = np.nonzero(mask)
-        if len(xs) > 0 and len(ys) > 0:
+        if draw_id and len(xs) > 0 and len(ys) > 0:
             cx = int(xs.mean())
             cy = int(ys.mean())
             cv2.putText(
