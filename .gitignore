@@ -1,4 +1,5 @@
 venv/
 weights/
+output/
 annotations.json
 metrics.xlsx
