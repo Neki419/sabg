@@ -8,7 +8,8 @@ import numpy as np
 import torch
 from torchvision.models.detection import maskrcnn_resnet50_fpn
 from torchvision.models.detection.rpn import AnchorGenerator, RPNHead
-from torchvision.models.detection.mask_rcnn import MaskRCNNHeads, MaskRCNNPredictor, FastRCNNPredictor
+from torchvision.models.detection.mask_rcnn import MaskRCNNHeads, MaskRCNNPredictor
+from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 
 
 class Model:

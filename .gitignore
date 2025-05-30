@@ -1,1 +1,4 @@
 venv/
+weights/
+annotations.json
+metrics.xlsx

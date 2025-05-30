@@ -25,11 +25,11 @@ def safe_ratio(numerator: np.ndarray, denominator: np.ndarray) -> np.ndarray:
     return ratio
 
 
-def compute_csi_bsi_bgav(image: np.ndarray, instances: List[Dict]) -> List[Dict]:
+def compute_csi_bsi_bgav(image: np.ndarray, preds: List[Dict]) -> List[Dict]:
     """
     Добавляет CSI, BSI и BGAV к каждому объекту с найденным фоном.
     """
-    for inst in instances:
+    for inst in preds:
         mask = inst['mask'] == 1  # бинарная маска
         bg_info = inst.get('background')
 
@@ -71,4 +71,4 @@ def compute_csi_bsi_bgav(image: np.ndarray, instances: List[Dict]) -> List[Dict]
         inst['bsi'] = bsi
         inst['bgav'] = bgav
 
-    return instances
+    return preds

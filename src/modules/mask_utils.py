@@ -2,7 +2,6 @@
 
 from typing import List, Dict
 import numpy as np
-import torch
 
 
 def filter_masks(preds: Dict, cfg: Dict) -> List[Dict]:

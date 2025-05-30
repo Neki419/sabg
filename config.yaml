@@ -1,10 +1,10 @@
 device: cpu
 
 paths:
-  input_dir: data/input
-  output_dir: results/output
-  model_weights: weights/mask_rcnn.pth
-  annotations: annotations.json
+  output_dir: /mnt/data/sabg/output
+  model_weights: /mnt/data/sabg/weights/weights.pth
+  annotations_file_path: /mnt/data/sabg/annotations.json
+  metrics_file_path: /mnt/data/sabg/metrics.xlsx
 
 filter:
   min_conf: 0.7

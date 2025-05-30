@@ -41,49 +41,76 @@ def _mask_to_polygons(mask: np.ndarray) -> list[list[float]]:
 
 def append_to_coco(
     preds: List[Dict],
-    folder: str,
-    image_name: str,
+    img_rel_path: str,
     ann_path: Path | str
 ) -> None:
+    """
+    • Если изображение с таким file_name уже есть в COCO-json,
+      его аннотации удаляются и заменяются новыми.
+    • Если изображения ещё нет, создаётся новая запись и новые аннотации.
+    """
     ann_path = Path(ann_path)
 
+    # ─── загрузка ───────────────────────────────────────────────
     with ann_path.open("r", encoding="utf-8") as f:
         coco = json.load(f)
 
-    # ───── новый image entry ─────
-    img_id = _next_id(coco.get("images", []))
-    h, w = preds[0]["mask"].shape
-    coco.setdefault("images", []).append({
-        "id": img_id,
-        "width":  w,
-        "height": h,
-        "file_name": f"{folder}/{image_name}",
-        "license":  0,
-        "flickr_url": "",
-        "coco_url":   "",
-        "date_captured": 0
-    })
+    coco.setdefault("images", [])
+    coco.setdefault("annotations", [])
 
-    # ───── новые annotations ─────
-    ann_id = _next_id(coco.get("annotations", []))
+    # ─── ищем, есть ли уже такое изображение ───────────────────
+    img_entry = next(
+        (img for img in coco["images"] if img["file_name"] == img_rel_path),
+        None,
+    )
+
+    if img_entry is not None:
+        # ── изображение уже есть: перезаписываем аннотации ─────
+        img_id = img_entry["id"]
+        # Удаляем старые аннотации для этого image_id
+        coco["annotations"] = [
+            ann for ann in coco["annotations"] if ann["image_id"] != img_id
+        ]
+    else:
+        # ── изображение отсутствует: добавляем новое ───────────
+        img_id = _next_id(coco["images"])
+        h, w = preds[0]["mask"].shape
+        coco["images"].append(
+            {
+                "id": img_id,
+                "width": w,
+                "height": h,
+                "file_name": img_rel_path,
+                "license": 0,
+                "flickr_url": "",
+                "coco_url": "",
+                "date_captured": 0,
+            }
+        )
+
+    # ─── добавляем (или заново добавляем) аннотации ────────────
+    ann_id = _next_id(coco["annotations"])
     for inst in preds:
-        mask   = inst["mask"]
-        area   = int(mask.sum())
+        mask = inst["mask"]
+        area = int(mask.sum())
         x1, y1, x2, y2 = inst["box"]
         bbox = [int(x1), int(y1), int(x2 - x1), int(y2 - y1)]
-        segm   = _mask_to_polygons(mask)
+        segm = _mask_to_polygons(mask)
 
-        coco.setdefault("annotations", []).append({
-            "id": ann_id,
-            "image_id": img_id,
-            "category_id": 1,        # при одной категории
-            "segmentation": segm,
-            "area": area,
-            "bbox": bbox,
-            "iscrowd": 0
-        })
+        coco["annotations"].append(
+            {
+                "id": ann_id,
+                "image_id": img_id,
+                "category_id": 1,  # одна категория
+                "segmentation": segm,
+                "area": area,
+                "bbox": bbox,
+                "iscrowd": 0,
+            }
+        )
         ann_id += 1
 
-    # ───── сохранить обратно ─────
+    # ─── сохранение ────────────────────────────────────────────
     with ann_path.open("w", encoding="utf-8") as f:
         json.dump(coco, f, ensure_ascii=False, indent=2)
+

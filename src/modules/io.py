@@ -68,7 +68,7 @@ def save_overlay(image_bgr: np.ndarray, instances: List[Dict], out_path: Path, d
                     str(inst['id']),
                     (cx, cy),
                     cv2.FONT_HERSHEY_SIMPLEX,
-                    0.6,
+                    1.5,
                     color,
                     2,
                     lineType=cv2.LINE_AA
@@ -87,18 +87,18 @@ def save_overlay(image_bgr: np.ndarray, instances: List[Dict], out_path: Path, d
 
 
 
-def save_binary_masks(name: str, instances: List[Dict], out_dir: Path, draw_id=False) -> None:
+def save_binary_masks(preds: List[Dict], out_path: Path, draw_id=False) -> None:
     """
     Save all masks as a single RGB image with distinct colors and ID labels.
     """
-    if not instances:
+    if not preds:
         return
 
-    h, w = instances[0]['mask'].shape
+    h, w = preds[0]['mask'].shape
     canvas = np.zeros((h, w, 3), dtype=np.uint8)
-    colors = get_distinct_colors(len(instances))
+    colors = get_distinct_colors(len(preds))
 
-    for i, inst in enumerate(instances):
+    for i, inst in enumerate(preds):
         mask = inst['mask']
         color = colors[i % len(colors)]
         for c in range(3):
@@ -113,64 +113,64 @@ def save_binary_masks(name: str, instances: List[Dict], out_dir: Path, draw_id=F
                 str(inst['id']),
                 (cx, cy),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
-                (255, 255, 255),
+                1.5,
+                (0, 0, 0),
                 1,
                 lineType=cv2.LINE_AA
             )
 
-    out_dir.mkdir(exist_ok=True, parents=True)
-    out_path = out_dir / f"{name}_masks.png"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     cv2.imwrite(str(out_path), canvas)
 
 
 
 def save_metrics(
+    preds: List[Dict],
     folder: str,
-    image: str,
-    instances: List[Dict],
-    path: Optional[Path] = None
+    image_name: str,
+    metrics_path: Path,
 ) -> None:
     """
     Save CSI, BSI, and BGAV metrics to a CSV or Excel file.
 
-    Each row includes:
-        folder, image, id, csi, bsi, bgav
-
-    If file exists, appends new rows. Otherwise creates it with headers.
-    If path is not specified, defaults to './<folder>.xlsx'.
+    If file exists, removes previous rows with same folder+image,
+    then appends new rows.
     """
-    # Подставляем путь по умолчанию
-    if path is None:
-        path = Path(f"{folder}.xlsx")
 
-    records = []
-    for inst in instances:
-        records.append({
-            "folder": folder,
-            "image": image,
-            "id": inst["id"],
-            "csi": inst["csi"],
-            "bsi": inst["bsi"],
-            "bgav": inst["bgav"],
-        })
+    metrics_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # Формируем новые строки
+    records = [{
+        "folder": folder,
+        "image": image_name,
+        "id": inst["id"],
+        "csi": inst["csi"],
+        "bsi": inst["bsi"],
+        "bgav": inst["bgav"],
+    } for inst in preds]
     df_new = pd.DataFrame(records)
 
-    if path.suffix == ".csv":
-        if path.exists():
-            df_new.to_csv(path, mode='a', header=False, index=False)
+    if metrics_path.exists():
+        if metrics_path.suffix == ".csv":
+            df_old = pd.read_csv(metrics_path)
+            # Удаляем старые строки с этим folder+image
+            df_old = df_old[~((df_old["folder"] == folder) & (df_old["image"] == image_name))]
+            df_result = pd.concat([df_old, df_new], ignore_index=True)
+            df_result.to_csv(metrics_path, index=False)
+
+        elif metrics_path.suffix in [".xls", ".xlsx"]:
+            df_old = pd.read_excel(metrics_path)
+            df_old = df_old[~((df_old["folder"] == folder) & (df_old["image"] == image_name))]
+            df_result = pd.concat([df_old, df_new], ignore_index=True)
+            df_result.to_excel(metrics_path, index=False)
+
         else:
-            df_new.to_csv(path, index=False)
-
-    elif path.suffix in [".xls", ".xlsx"]:
-        from openpyxl import load_workbook
-
-        if path.exists():
-            with pd.ExcelWriter(path, mode='a', engine='openpyxl', if_sheet_exists='overlay') as writer:
-                df_new.to_excel(writer, index=False, header=False, startrow=writer.sheets['Sheet1'].max_row)
-        else:
-            df_new.to_excel(path, index=False)
-
+            raise ValueError("Unsupported file extension. Use .csv or .xlsx")
     else:
-        raise ValueError("Unsupported file extension. Use .csv or .xlsx")
+        # Файл ещё не существует — просто сохраняем
+        if metrics_path.suffix == ".csv":
+            df_new.to_csv(metrics_path, index=False)
+        elif metrics_path.suffix in [".xls", ".xlsx"]:
+            df_new.to_excel(metrics_path, index=False)
+        else:
+            raise ValueError("Unsupported file extension. Use .csv or .xlsx")
