@@ -15,8 +15,8 @@ from modules.io         import (
     save_overlay,
     save_binary_masks,
     save_metrics,
+    append_to_coco,
 )
-from modules.exporter   import append_to_coco
 
 
 # ───────────────────────── helpers ──────────────────────────
