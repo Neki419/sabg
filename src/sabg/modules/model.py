@@ -1,8 +1,6 @@
 # model.py — Mask R-CNN wrapper
 
-import os
-from pathlib import Path
-from typing import Union, Dict
+from typing import Dict
 
 import numpy as np
 import torch
@@ -51,7 +49,7 @@ class Model:
         Run inference on a single image.
         Returns a dict with masks, scores, boxes, labels, etc.
         """
-        from modules.io import to_tensor  # avoid circular import
+        from sabg.modules.io import to_tensor  # avoid circular import
         tensor = to_tensor(image_bgr)
 
         tensor = tensor.to(self.device)

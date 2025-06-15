@@ -6,11 +6,11 @@ from typing import Dict, List, Union
 import tqdm
 
 # internal modules
-from modules.model      import Model
-from modules.mask_utils import filter_masks, assign_ids
-from modules.background import find_background
-from modules.metrics    import compute_csi_bsi_bgav
-from modules.io         import (
+from sabg.modules.model      import Model
+from sabg.modules.mask_utils import filter_masks, assign_ids
+from sabg.modules.background import find_background
+from sabg.modules.metrics    import compute_csi_bsi_bgav
+from sabg.modules.io         import (
     load_image,
     save_overlay,
     save_binary_masks,

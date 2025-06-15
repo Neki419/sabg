@@ -1,7 +1,7 @@
 import argparse
 import yaml
 from pathlib import Path
-from pipeline import run_pipeline
+from sabg.pipeline import run_pipeline
 
 
 def main():
