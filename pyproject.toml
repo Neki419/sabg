@@ -1,0 +1,28 @@
+[project]
+name = "sabg-analysis"
+version = "0.1.0"
+description = "Tool for quantitative digital in situ senescence-associated β-galactosidase assay analysis of fibroblasts"
+readme = "README.md"
+authors = [{ name = "Nikita", email = "nikita.sedlyar@yandex.ru" }]
+license = "HSE"
+requires-python = ">=3.12"
+
+dependencies = [
+    "huggingface_hub==0.32.3",
+    "numpy==2.3.0",
+    "opencv_python==4.11.0.86",
+    "pandas==2.3.0",
+    "PyYAML==6.0.2",
+    "skimage==0.25.2",
+    "torch==2.7.0",
+    "torchvision==0.22.0",
+    "tqdm==4.67.1"
+]
+
+[project.scripts]
+init_config = "sabg.init_config:main"
+run_pipeline = "sabg.run_pipeline:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

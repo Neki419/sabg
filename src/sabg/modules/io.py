@@ -269,3 +269,4 @@ def append_to_coco(
     # ─── сохранение ────────────────────────────────────────────
     with ann_path.open("w", encoding="utf-8") as f:
         json.dump(coco, f, ensure_ascii=False, indent=2)
+

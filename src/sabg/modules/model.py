@@ -6,6 +6,7 @@ from typing import Union, Dict
 
 import numpy as np
 import torch
+from huggingface_hub import hf_hub_download
 from torchvision.models.detection import maskrcnn_resnet50_fpn
 from torchvision.models.detection.rpn import AnchorGenerator, RPNHead
 from torchvision.models.detection.mask_rcnn import MaskRCNNHeads, MaskRCNNPredictor
@@ -13,13 +14,8 @@ from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 
 
 class Model:
-    def __init__(self, weights_path: Union[str, Path], device: str = "cuda"):
+    def __init__(self, weights_name: str, device: str = "cuda"):
         self.device = torch.device(device)
-
-        # Auto-download weights if not present
-        weights_path = Path(weights_path)
-        if not weights_path.exists():
-            raise FileNotFoundError(f"Model weights not found at {weights_path}. Please download manually.")
 
         # Build model architecture (NUM_CLASSES = 2 assumed: background + cell)
         self.model = maskrcnn_resnet50_fpn(weights="DEFAULT")
@@ -45,8 +41,9 @@ class Model:
         self.model.roi_heads.mask_predictor = MaskRCNNPredictor(256, 256, 2)
 
         # Load weights
-        checkpoint = torch.load(weights_path, map_location=self.device)
-        self.model.load_state_dict(checkpoint)
+        weights_path = hf_hub_download(repo_id="Neki419/sabg", filename=weights_name)
+        weights = torch.load(weights_path, map_location=self.device)
+        self.model.load_state_dict(weights)
         self.model.to(self.device).eval()
 
     def predict(self, image_bgr: np.ndarray) -> Dict:

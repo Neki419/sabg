@@ -62,7 +62,7 @@ def run_pipeline(folder_path: Union[str, Path], cfg: Dict) -> None:
 
     # ── model
     model = Model(
-        weights_path=cfg["paths"]["model_weights"],
+        weights_name=cfg["model"],
         device=cfg["device"],
     )
 
